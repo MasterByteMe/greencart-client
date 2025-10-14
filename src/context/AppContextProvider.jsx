@@ -20,6 +20,7 @@ export const AppContextProvider = ({ children }) => {
     const [showUserLogin, setShowUserLogin] = useState(false);
     const [products, setProducts] = useState([]);
     const [cartItems, setCartItems] = useState({});
+    const [searchQuery, setSearchQuery] = useState({});
 
     // Fetch All Products
     const fetchProducts = async () => {
@@ -66,7 +67,7 @@ export const AppContextProvider = ({ children }) => {
     }, [])
 
     // 3️⃣ Combine all values in one object (easy to share)
-    const value = { navigate, user, setUser, isSeller, setIsSeller, showUserLogin, setShowUserLogin, products, currency, addToCart, updateCartItem, removeFromCart, cartItems };
+    const value = { navigate, user, setUser, isSeller, setIsSeller, showUserLogin, setShowUserLogin, products, currency, addToCart, updateCartItem, removeFromCart, cartItems, searchQuery, setSearchQuery };
 
     // 4️⃣ Provide the value to all child components
     return (
