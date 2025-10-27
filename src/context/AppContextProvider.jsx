@@ -3,8 +3,14 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { AppContext } from "./AppContext";
-import { dummyProducts } from "../assets/assets";
 import toast from "react-hot-toast";
+import axios from "axios";
+
+// Enable sending and receiving cookies (for authentication) with every Axios request
+axios.defaults.withCredentials = true;
+
+// Set the base URL for all Axios requests using the environment variable from Vite
+axios.defaults.baseURL = import.meta.env.VITE_BACKEND_URL;
 
 
 export const AppContextProvider = ({ children }) => {
@@ -22,9 +28,47 @@ export const AppContextProvider = ({ children }) => {
     const [cartItems, setCartItems] = useState({});
     const [searchQuery, setSearchQuery] = useState({});
 
+    // Fetch Seller Status
+    const fetchSeller = async () => {
+        try {
+            const { data } = await axios.get('/api/seller/is-auth');
+            if (data.success) {
+                setIsSeller(true);
+            } else {
+                setIsSeller(false);
+            }
+        } catch (error) {
+            setIsSeller(false);
+        }
+    }
+
+    // Fetch User Auth Status, User Data and Cart Items
+    const fetchUser = async () => {
+        try {
+            const { data } = await axios.get('/api/user/is-auth');
+            if (data.success) {
+                setUser(data.user)
+                setCartItems(data.user.cartItems);
+            }
+        } catch (error) {
+            setUser(null);
+        }
+    }
+
+
+
     // Fetch All Products
     const fetchProducts = async () => {
-        setProducts(dummyProducts);
+        try {
+            const { data } = await axios.get('/api/product/list');
+            if (data.success) {
+                setProducts(data.products);
+            } else {
+                toast.error(data.message);
+            }
+        } catch (error) {
+            toast.error(error.message);
+        }
     }
 
     // Add Cart Item Quantity
@@ -85,11 +129,14 @@ export const AppContextProvider = ({ children }) => {
 
 
     useEffect(() => {
+        fetchUser()
+        fetchSeller()
         fetchProducts();
     }, [])
 
+
     // 3️⃣ Combine all values in one object (easy to share)
-    const value = { navigate, user, setUser, isSeller, setIsSeller, showUserLogin, setShowUserLogin, products, currency, addToCart, updateCartItem, removeFromCart, cartItems, searchQuery, setSearchQuery, getCartCount, getCartAmount };
+    const value = { navigate, user, setUser, isSeller, setIsSeller, showUserLogin, setShowUserLogin, products, currency, addToCart, updateCartItem, removeFromCart, cartItems, searchQuery, setSearchQuery, getCartCount, getCartAmount, axios, fetchProducts };
 
     // 4️⃣ Provide the value to all child components
     return (
