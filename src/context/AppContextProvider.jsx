@@ -23,53 +23,53 @@ export const AppContextProvider = ({ children }) => {
     // 2️⃣ Global states shared across the app
     const [user, setUser] = useState(null);       // holds the current user data
     const [isSeller, setIsSeller] = useState(false); // checks if user is a seller
+    const [isAuthLoaded, setIsAuthLoaded] = useState(false);
+
     const [showUserLogin, setShowUserLogin] = useState(false);
     const [products, setProducts] = useState([]);
     const [cartItems, setCartItems] = useState({});
     const [searchQuery, setSearchQuery] = useState({});
 
+
+
+    // ✅ Fetch user and mark auth as loaded after done
+    const fetchUser = async () => {
+        try {
+            const { data } = await axios.get("/api/user/is-auth");
+            if (data.success) {
+                setUser(data.user);
+                setCartItems(data.user.cartItems || {});
+            } else {
+                setUser(null);
+            }
+        } catch {
+            setUser(null);
+        } finally {
+            setIsAuthLoaded(true); // ✅ Always mark finished
+        }
+    };
+
     // Fetch Seller Status
     const fetchSeller = async () => {
         try {
-            const { data } = await axios.get('/api/seller/is-auth');
-            if (data.success) {
-                setIsSeller(true);
-            } else {
-                setIsSeller(false);
-            }
-        } catch (error) {
+            const { data } = await axios.get("/api/seller/is-auth");
+            setIsSeller(data.success);
+        } catch {
             setIsSeller(false);
         }
-    }
-
-    // Fetch User Auth Status, User Data and Cart Items
-    const fetchUser = async () => {
-        try {
-            const { data } = await axios.get('/api/user/is-auth');
-            if (data.success) {
-                setUser(data.user)
-                setCartItems(data.user.cartItems);
-            }
-        } catch (error) {
-            setUser(null);
-        }
-    }
-
+    };
 
 
     // Fetch All Products
     const fetchProducts = async () => {
         try {
-            const { data } = await axios.get('/api/product/list');
-            if (data.success) {
-                setProducts(data.products);
-            } else {
-                toast.error(data.message);
-            }
+            const { data } = await axios.get("/api/product/list");
+            if (data.success) setProducts(data.products);
+            else toast.error(data.message);
         } catch (error) {
             toast.error(error.message);
         }
-    }
+    };
 
     // Add Cart Item Quantity
     const addToCart = (itemId) => {
@@ -135,8 +135,28 @@ export const AppContextProvider = ({ children }) => {
     }, [])
 
 
+    // Update Database Cart Items
+    useEffect(() => {
+        const updateCart = async () => {
+            try {
+                const { data } = await axios.post('/api/cart/update', { cartItems })
+                if (!data.success) {
+                    toast.error(data.message);
+                }
+            } catch (error) {
+                toast.error(error.message);
+            }
+        }
+        if (user) {
+            updateCart()
+        }
+    }, [cartItems, user])
+
+
+
+
     // 3️⃣ Combine all values in one object (easy to share)
-    const value = { navigate, user, setUser, isSeller, setIsSeller, showUserLogin, setShowUserLogin, products, currency, addToCart, updateCartItem, removeFromCart, cartItems, searchQuery, setSearchQuery, getCartCount, getCartAmount, axios, fetchProducts };
+    const value = { navigate, user, setUser, isSeller, setIsSeller, showUserLogin, setShowUserLogin, products, currency, addToCart, updateCartItem, removeFromCart, cartItems, searchQuery, setSearchQuery, getCartCount, getCartAmount, axios, fetchProducts, setCartItems, isAuthLoaded, fetchUser };
 
     // 4️⃣ Provide the value to all child components
     return (
