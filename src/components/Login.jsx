@@ -5,7 +5,7 @@ import toast from "react-hot-toast";
 
 const Login = () => {
 
-    const { setShowUserLogin, setUser, axios, navigate } = useAppContext();
+    const { setShowUserLogin, axios, navigate, fetchUser } = useAppContext();
 
     const [state, setState] = React.useState("login");
     const [name, setName] = React.useState("");
@@ -15,25 +15,28 @@ const Login = () => {
 
 
     const onSubmitHandler = async (e) => {
-        try {
-            e.preventDefault();
+        e.preventDefault();
 
-            const { data } = await axios.post(`api/user/${state}`, {
-                name, email, password
-            });
+        try {
+            const { data } = await axios.post(`api/user/${state}`, { name, email, password });
+
             if (data.success) {
                 toast.success(state === 'login' ? 'Login successful!' : 'Registration successful!');
-                navigate('/')
-                setUser(data.user)
+
+                // ✅ Step 1: Fetch user from backend (ensures cookie/session is read)
+                await fetchUser();
+
+                // ✅ Step 2: Close login modal & navigate
                 setShowUserLogin(false);
+                navigate('/');
+
             } else {
                 toast.error(data.message);
-
             }
         } catch (error) {
             toast.error(error.message);
         }
-    }
+    };
 
 
 
