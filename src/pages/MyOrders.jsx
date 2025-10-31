@@ -1,20 +1,35 @@
 import React, { useEffect, useState } from 'react'
 import { useAppContext } from '../context/AppContext'
-import { dummyOrders } from '../assets/assets';
+
 
 const MyOrders = () => {
 
     const [myOrders, setMyOrders] = useState([]);
-    const { currency } = useAppContext();
+    const { currency, axios, user, isAuthLoaded } = useAppContext();
 
     // fetch the my orders
-    const fetchMyOrders = async () => {
-        setMyOrders(dummyOrders)
+    useEffect(() => {
+        const fetchMyOrders = async () => {
+            try {
+                const { data } = await axios.get(`/api/order/user?userId=${user._id}`);
+                if (data.success) setMyOrders(data.orders);
+            } catch (error) {
+                console.log("Error fetching orders:", error.message);
+            }
+        };
+
+        if (isAuthLoaded && user) {
+            fetchMyOrders();
+        }
+    }, [isAuthLoaded, user]); // ✅ wait for auth check to finish
+
+    if (!isAuthLoaded) {
+        return <p className="text-gray-500 mt-16">Loading orders...</p>; // ✅ simple loading state
     }
 
-    useEffect(() => {
-        fetchMyOrders();
-    }, [])
+    if (isAuthLoaded && !user) {
+        return <p className="text-gray-500 mt-16">Please log in to view your orders.</p>;
+    }
 
 
     return (
