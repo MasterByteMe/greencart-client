@@ -127,12 +127,12 @@ export const AppContextProvider = ({ children }) => {
     }
 
 
-
     useEffect(() => {
         fetchUser()
         fetchSeller()
         fetchProducts();
     }, [])
+
 
 
     // Update Database Cart Items
